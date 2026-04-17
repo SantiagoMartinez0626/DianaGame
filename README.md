@@ -2,7 +2,7 @@
 
 ## Estudiante
 
-- **Nombre completo:** _(completar)_
+- **Nombre completo:** Michael Santiago Martinez López
 - **Parcial:** #2
 
 ## Descripción
@@ -21,17 +21,13 @@ Coloca aquí las imágenes desde la carpeta `Screenshots/` (mínimo 5 según la 
 
 ## Video de funcionamiento
 
-[Ver video del juego](https://) _(enlace a YouTube o Google Drive)_
+[Ver video del juego](https://)
 
 ## Cómo ejecutar el proyecto
 
 1. Clonar el repositorio (sin la carpeta `Library/`).
-2. Abrir el proyecto con **Unity 6** (6000.x), por ejemplo **6000.4.3f1** o compatible.
+2. Abrir el proyecto con **Unity 6** (6000.x), o compatible.
 3. Abrir la escena `Assets/Scenes/SampleScene.unity`.
 4. Pulsar **Play**.
 
 **Nota:** El contenido de juego (diana, fondo, UI, arco) se genera en tiempo de ejecución mediante el objeto **GameBootstrap** en la escena. El prefab de la flecha está en `Assets/Prefabs/Arrow.prefab` y se carga también desde `Assets/Resources/Arrow.prefab` para el disparo.
-
-## Repositorio
-
-- Si el repositorio es **privado**, agregar como colaborador al docente: **dario1091@gmail.com**.
