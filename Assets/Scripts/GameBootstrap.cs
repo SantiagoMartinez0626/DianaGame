@@ -23,10 +23,12 @@ public class GameBootstrap : MonoBehaviour
     [Tooltip("Sprite del arco (opcional). Si no existe, usa placeholder.")]
     [SerializeField] Sprite bowSprite;
     [SerializeField] float targetVisualScale = 1.35f;
+    [Tooltip("Radio del centro que suma puntos, como fracción del semirradio de la cara (medido en target.jpg: oro ~87px / 256px).")]
+    [SerializeField] [Range(0.08f, 0.55f)] float bullseyeRadiusFractionOfFaceHalf = 87f / 256f;
     [SerializeField] float bowVisualScale = 1.15f;
     [Tooltip("Sprite visual de la flecha disparada (ej. Assets/Sprites/arrow.png).")]
     [SerializeField] Sprite arrowShotSprite;
-    [SerializeField] Vector3 arrowShotScale = new Vector3(1.2f, 1.2f, 1f);
+    [SerializeField] Vector3 arrowShotScale = new Vector3(0.48f, 0.48f, 1f);
 
     void Awake()
     {
@@ -87,19 +89,35 @@ public class GameBootstrap : MonoBehaviour
         outer.transform.localScale = targetSprite != null ? Vector3.one * targetVisualScale : Vector3.one * 1.6f;
         var outerCol = outer.AddComponent<CircleCollider2D>();
         outerCol.isTrigger = true;
-        outerCol.radius = 0.5f;
+        if (targetSprite != null)
+            outerCol.radius = Mathf.Max(outerSr.sprite.bounds.extents.x, 0.06f);
+        else
+            outerCol.radius = 0.5f;
 
-        // Centro (bullseye) — único collider que cuenta por tag
+        // Centro (bullseye): con textura, el collider sigue el círculo amarillo del arte (ver bullseyeRadiusFractionOfFaceHalf).
         var bull = new GameObject("Bullseye");
         bull.transform.SetParent(target.transform, false);
         bull.tag = "Bullseye";
         var bullSr = bull.AddComponent<SpriteRenderer>();
         bullSr.sprite = MakeSpriteCircle(new Color(1f, 0.92f, 0.2f));
         bullSr.sortingOrder = 1;
-        bull.transform.localScale = Vector3.one * 0.35f;
         var bullCol = bull.AddComponent<CircleCollider2D>();
         bullCol.isTrigger = true;
-        bullCol.radius = 0.5f;
+        float faceHalfWorld = outerCol.radius * Mathf.Abs(outer.transform.lossyScale.x);
+        float bullFrac = targetSprite != null ? bullseyeRadiusFractionOfFaceHalf : 0.28f;
+        if (targetSprite != null)
+        {
+            bull.transform.localScale = Vector3.one;
+            bullCol.radius = Mathf.Max(faceHalfWorld * bullFrac, 0.04f);
+            bullSr.enabled = false;
+        }
+        else
+        {
+            bull.transform.localScale = Vector3.one * 0.35f;
+            float worldR = Mathf.Max(faceHalfWorld * bullFrac, 0.06f);
+            bullCol.radius = worldR / Mathf.Max(Mathf.Abs(bull.transform.lossyScale.x), 1e-4f);
+            bullSr.enabled = true;
+        }
 
         // --- Arco / disparo
         var bow = new GameObject("Bow");

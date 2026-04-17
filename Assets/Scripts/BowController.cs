@@ -18,6 +18,8 @@ public class BowController : MonoBehaviour
     [SerializeField] Vector3 arrowVisualScale = new Vector3(0.45f, 0.45f, 1f);
     [SerializeField] float minShotPower = 4f;
     [SerializeField] int arrowSortingOrder = 40;
+    [Tooltip("Si el dibujo de la flecha apunta hacia arriba en el sprite (+Y), usa -90. Si apunta a la derecha (+X), deja 0.")]
+    [SerializeField] float arrowSpriteFacingOffsetDeg = -90f;
 
     float _power;
     float _nextShotTime;
@@ -101,7 +103,7 @@ public class BowController : MonoBehaviour
         float rad = shotAngleDeg * Mathf.Deg2Rad;
         var vel = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * shotPower;
         rb.linearVelocity = vel;
-        float angleDeg = Mathf.Atan2(vel.y, vel.x) * Mathf.Rad2Deg;
+        float angleDeg = Mathf.Atan2(vel.y, vel.x) * Mathf.Rad2Deg + arrowSpriteFacingOffsetDeg;
         arrow.transform.rotation = Quaternion.Euler(0f, 0f, angleDeg);
 
         var arrowScript = arrow.GetComponent<Arrow>();

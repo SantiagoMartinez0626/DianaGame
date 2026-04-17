@@ -1,7 +1,8 @@
 using UnityEngine;
 
 /// <summary>
-/// Flecha con trigger: solo el centro (tag Bullseye o solapamiento con su collider) suma puntos.
+/// Flecha con triggers: el acierto se comprueba con la punta mientras cruza la diana;
+/// "Fallaste" solo al salir de la cara sin haber pasado por el centro (oro).
 /// </summary>
 public class Arrow : MonoBehaviour
 {
@@ -9,39 +10,81 @@ public class Arrow : MonoBehaviour
 
     bool _done;
 
-    /// <summary>
-    /// Asignado al instanciar la flecha para comprobar acierto si el primer trigger es el anillo exterior.
-    /// </summary>
     public void SetBullseyeCollider(CircleCollider2D col) => bullseyeCollider = col;
+
+    static bool IsInsideBullseye(CircleCollider2D bull, Vector2 worldPos)
+    {
+        if (bull == null)
+            return false;
+        if (bull.OverlapPoint(worldPos))
+            return true;
+        float scale = Mathf.Max(Mathf.Abs(bull.transform.lossyScale.x), Mathf.Abs(bull.transform.lossyScale.y));
+        float r = bull.radius * scale + 0.04f;
+        return Vector2.Distance(worldPos, bull.transform.position) <= r;
+    }
+
+    /// <summary>Punto delantero de la flecha (eje X local = dirección del vuelo).</summary>
+    Vector2 GetTipWorld()
+    {
+        var bc = GetComponent<BoxCollider2D>();
+        float half = bc != null ? bc.size.x * Mathf.Abs(transform.lossyScale.x) * 0.5f : 0.2f;
+        return (Vector2)transform.position + (Vector2)transform.right * half;
+    }
+
+    void TryRegisterBullseyeHit()
+    {
+        if (_done || bullseyeCollider == null)
+            return;
+        if (IsInsideBullseye(bullseyeCollider, GetTipWorld()))
+            RegisterHit();
+    }
+
+    /// <summary>Para que no siga el vuelo un frame más: quita física, triggers y dibujo al instante.</summary>
+    void FreezeAndHide()
+    {
+        var rb = GetComponent<Rigidbody2D>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector2.zero;
+            rb.angularVelocity = 0f;
+            rb.simulated = false;
+        }
+
+        foreach (var col in GetComponents<Collider2D>())
+            col.enabled = false;
+
+        var sr = GetComponent<SpriteRenderer>();
+        if (sr != null)
+            sr.enabled = false;
+    }
+
+    void MissAndDestroy()
+    {
+        if (_done)
+            return;
+        _done = true;
+        FreezeAndHide();
+        if (GameFeedback.Instance != null)
+            GameFeedback.Instance.ShowMiss();
+        else
+            Debug.Log("¡Fallaste!");
+        Destroy(gameObject);
+    }
 
     void OnTriggerEnter2D(Collider2D other)
     {
         if (_done)
             return;
 
-        // Acierto: collider del centro (requisito del parcial)
         if (other.CompareTag("Bullseye"))
         {
-            RegisterHit();
+            TryRegisterBullseyeHit();
             return;
         }
 
-        // Anillo exterior: puede activarse antes que el bullseye; comprobar si el impacto cae en el centro
         if (other.CompareTag("OuterRing"))
         {
-            if (bullseyeCollider != null && bullseyeCollider.OverlapPoint(transform.position))
-            {
-                RegisterHit();
-                return;
-            }
-
-            if (GameFeedback.Instance != null)
-                GameFeedback.Instance.ShowMiss();
-            else
-                Debug.Log("¡Fallaste!");
-
-            _done = true;
-            Destroy(gameObject);
+            TryRegisterBullseyeHit();
             return;
         }
 
@@ -52,13 +95,33 @@ public class Arrow : MonoBehaviour
         }
     }
 
+    void OnTriggerStay2D(Collider2D other)
+    {
+        if (_done)
+            return;
+        if (other.CompareTag("Bullseye") || other.CompareTag("OuterRing"))
+            TryRegisterBullseyeHit();
+    }
+
+    void OnTriggerExit2D(Collider2D other)
+    {
+        if (_done)
+            return;
+        if (!other.CompareTag("OuterRing"))
+            return;
+        MissAndDestroy();
+    }
+
     void RegisterHit()
     {
         if (_done)
             return;
         _done = true;
+        FreezeAndHide();
         if (ScoreManager.Instance != null)
             ScoreManager.Instance.AddScore(10);
+        if (GameFeedback.Instance != null)
+            GameFeedback.Instance.ShowGreat();
         Destroy(gameObject);
     }
 }
