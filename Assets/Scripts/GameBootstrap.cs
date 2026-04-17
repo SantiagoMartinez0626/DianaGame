@@ -9,6 +9,12 @@ public class GameBootstrap : MonoBehaviour
 {
     [SerializeField] bool buildOnAwake = true;
 
+    [Header("Fondo")]
+    [Tooltip("Arrastra aquí el sprite importado desde Assets/Sprites/background.jpg (Texture Type: Sprite).")]
+    [SerializeField] Sprite backgroundSprite;
+
+    [SerializeField] [Range(1f, 1.1f)] float backgroundCoverPadding = 1.02f;
+
     void Awake()
     {
         if (buildOnAwake)
@@ -25,12 +31,21 @@ public class GameBootstrap : MonoBehaviour
             cam.backgroundColor = new Color(0.15f, 0.2f, 0.28f);
         }
 
-        // --- Fondo (placeholder)
+        // --- Fondo (imagen en Assets/Sprites o placeholder)
         var bg = new GameObject("Background");
         var bgSr = bg.AddComponent<SpriteRenderer>();
-        bgSr.sprite = MakeSpriteSquare(new Color(0.25f, 0.45f, 0.28f));
         bgSr.sortingOrder = -20;
-        bg.transform.localScale = new Vector3(24f, 16f, 1f);
+        if (backgroundSprite != null)
+        {
+            bgSr.sprite = backgroundSprite;
+            bgSr.color = Color.white;
+            FitSpriteToOrthographicCamera(bgSr, cam, backgroundCoverPadding);
+        }
+        else
+        {
+            bgSr.sprite = MakeSpriteSquare(new Color(0.25f, 0.45f, 0.28f));
+            bg.transform.localScale = new Vector3(24f, 16f, 1f);
+        }
 
         // --- Diana
         var target = new GameObject("Target");
@@ -173,6 +188,30 @@ public class GameBootstrap : MonoBehaviour
         var kc = kill.AddComponent<BoxCollider2D>();
         kc.isTrigger = true;
         kc.size = new Vector2(40f, 2f);
+    }
+
+    /// <summary>
+    /// Escala el sprite para cubrir el rectángulo visible de la cámara ortográfica (modo “cover”).
+    /// </summary>
+    static void FitSpriteToOrthographicCamera(SpriteRenderer sr, Camera cam, float padding)
+    {
+        if (sr == null || sr.sprite == null)
+            return;
+        if (cam == null || !cam.orthographic)
+        {
+            sr.transform.localScale = Vector3.one * 12f;
+            return;
+        }
+
+        float camH = cam.orthographicSize * 2f;
+        float camW = camH * cam.aspect;
+        var b = sr.sprite.bounds;
+        float sx = camW / b.size.x;
+        float sy = camH / b.size.y;
+        float s = Mathf.Max(sx, sy) * padding;
+        sr.transform.localScale = new Vector3(s, s, 1f);
+        var p = cam.transform.position;
+        sr.transform.position = new Vector3(p.x, p.y, 0f);
     }
 
     static Sprite MakeSpriteSquare(Color c)

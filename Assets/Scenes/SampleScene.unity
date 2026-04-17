@@ -395,3 +395,5 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   buildOnAwake: 1
+  backgroundSprite: {fileID: 1234567890123456789, guid: d1e2f3a4b5c6478901234567890abcd1, type: 3}
+  backgroundCoverPadding: 1.02

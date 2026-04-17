@@ -31,3 +31,5 @@ Coloca aquí las imágenes desde la carpeta `Screenshots/` (mínimo 5 según la 
 4. Pulsar **Play**.
 
 **Nota:** El contenido de juego (diana, fondo, UI, arco) se genera en tiempo de ejecución mediante el objeto **GameBootstrap** en la escena. El prefab de la flecha está en `Assets/Prefabs/Arrow.prefab` y se carga también desde `Assets/Resources/Arrow.prefab` para el disparo.
+
+El fondo usa la imagen `Assets/Sprites/background.jpg` importada como **Sprite** y referenciada en **GameBootstrap** (se escala para cubrir la cámara). Si cambias el archivo, deja el tipo de textura en **Sprite (2D and UI)** y pulsa **Apply**.
