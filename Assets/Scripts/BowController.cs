@@ -14,8 +14,13 @@ public class BowController : MonoBehaviour
     [SerializeField] float shotAngleDeg = 38f;
     [SerializeField] Image powerBarFill;
     [SerializeField] CircleCollider2D bullseyeCollider;
+    [SerializeField] Sprite arrowSprite;
+    [SerializeField] Vector3 arrowVisualScale = new Vector3(0.45f, 0.45f, 1f);
+    [SerializeField] float minShotPower = 4f;
+    [SerializeField] int arrowSortingOrder = 40;
 
     float _power;
+    float _nextShotTime;
 
     /// <summary>
     /// Asignado por GameBootstrap al montar la escena.
@@ -36,6 +41,12 @@ public class BowController : MonoBehaviour
         shotAngleDeg = angleDegrees;
     }
 
+    public void SetArrowVisual(Sprite sprite, Vector3 scale)
+    {
+        arrowSprite = sprite;
+        arrowVisualScale = scale;
+    }
+
     void Update()
     {
         var kb = Keyboard.current;
@@ -53,7 +64,11 @@ public class BowController : MonoBehaviour
 
         if (kb.spaceKey.wasReleasedThisFrame)
         {
-            Shoot();
+            if (Time.time >= _nextShotTime)
+            {
+                Shoot();
+                _nextShotTime = Time.time + 0.12f;
+            }
             _power = 0f;
             if (powerBarFill != null)
                 powerBarFill.fillAmount = 0f;
@@ -66,13 +81,28 @@ public class BowController : MonoBehaviour
             return;
 
         var arrow = Instantiate(arrowPrefab, shootPoint.position, Quaternion.identity);
+        var sr = arrow.GetComponent<SpriteRenderer>();
+        if (sr != null)
+        {
+            if (arrowSprite != null)
+                sr.sprite = arrowSprite;
+            sr.sortingOrder = arrowSortingOrder;
+            sr.enabled = true;
+            sr.color = Color.white;
+        }
+
+        arrow.transform.localScale = arrowVisualScale;
+
         var rb = arrow.GetComponent<Rigidbody2D>();
         if (rb == null)
             return;
 
+        float shotPower = Mathf.Max(_power, minShotPower);
         float rad = shotAngleDeg * Mathf.Deg2Rad;
-        var vel = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * _power;
+        var vel = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * shotPower;
         rb.linearVelocity = vel;
+        float angleDeg = Mathf.Atan2(vel.y, vel.x) * Mathf.Rad2Deg;
+        arrow.transform.rotation = Quaternion.Euler(0f, 0f, angleDeg);
 
         var arrowScript = arrow.GetComponent<Arrow>();
         if (arrowScript != null && bullseyeCollider != null)

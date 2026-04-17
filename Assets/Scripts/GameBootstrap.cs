@@ -1,5 +1,6 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
 /// <summary>
@@ -8,12 +9,24 @@ using UnityEngine.UI;
 public class GameBootstrap : MonoBehaviour
 {
     [SerializeField] bool buildOnAwake = true;
+    bool _built;
 
     [Header("Fondo")]
     [Tooltip("Arrastra aquí el sprite importado desde Assets/Sprites/background.jpg (Texture Type: Sprite).")]
     [SerializeField] Sprite backgroundSprite;
 
     [SerializeField] [Range(1f, 1.1f)] float backgroundCoverPadding = 1.02f;
+
+    [Header("Sprites de gameplay")]
+    [Tooltip("Sprite de la diana completa (ej. Assets/Sprites/target.jpg).")]
+    [SerializeField] Sprite targetSprite;
+    [Tooltip("Sprite del arco (opcional). Si no existe, usa placeholder.")]
+    [SerializeField] Sprite bowSprite;
+    [SerializeField] float targetVisualScale = 1.35f;
+    [SerializeField] float bowVisualScale = 1.15f;
+    [Tooltip("Sprite visual de la flecha disparada (ej. Assets/Sprites/arrow.png).")]
+    [SerializeField] Sprite arrowShotSprite;
+    [SerializeField] Vector3 arrowShotScale = new Vector3(1.2f, 1.2f, 1f);
 
     void Awake()
     {
@@ -23,6 +36,18 @@ public class GameBootstrap : MonoBehaviour
 
     void Build()
     {
+        if (_built)
+            return;
+
+        GameObject arrowTemplate = Resources.Load<GameObject>("Arrow");
+        if (arrowTemplate == null)
+        {
+            Debug.LogError("Falta el prefab Resources/Arrow. Coloca Assets/Resources/Arrow.prefab.");
+            return;
+        }
+
+        _built = true;
+
         var cam = Camera.main;
         if (cam != null)
         {
@@ -57,9 +82,9 @@ public class GameBootstrap : MonoBehaviour
         outer.transform.SetParent(target.transform, false);
         outer.tag = "OuterRing";
         var outerSr = outer.AddComponent<SpriteRenderer>();
-        outerSr.sprite = MakeSpriteCircle(new Color(0.85f, 0.2f, 0.15f));
+        outerSr.sprite = targetSprite != null ? targetSprite : MakeSpriteCircle(new Color(0.85f, 0.2f, 0.15f));
         outerSr.sortingOrder = 0;
-        outer.transform.localScale = Vector3.one * 1.6f;
+        outer.transform.localScale = targetSprite != null ? Vector3.one * targetVisualScale : Vector3.one * 1.6f;
         var outerCol = outer.AddComponent<CircleCollider2D>();
         outerCol.isTrigger = true;
         outerCol.radius = 0.5f;
@@ -83,17 +108,11 @@ public class GameBootstrap : MonoBehaviour
         shoot.transform.SetParent(bow.transform, false);
         shoot.transform.localPosition = new Vector3(0.4f, 0.35f, 0f);
         var bowSr = bow.AddComponent<SpriteRenderer>();
-        bowSr.sprite = MakeSpriteSquare(new Color(0.45f, 0.28f, 0.12f));
+        bowSr.sprite = bowSprite != null ? bowSprite : MakeSpriteSquare(new Color(0.45f, 0.28f, 0.12f));
         bowSr.sortingOrder = 2;
-        bow.transform.localScale = new Vector3(0.5f, 0.8f, 1f);
+        bow.transform.localScale = bowSprite != null ? new Vector3(bowVisualScale, bowVisualScale, 1f) : new Vector3(0.5f, 0.8f, 1f);
 
         var bowCtrl = bow.AddComponent<BowController>();
-        GameObject arrowTemplate = Resources.Load<GameObject>("Arrow");
-        if (arrowTemplate == null)
-        {
-            Debug.LogError("Falta el prefab Resources/Arrow. Coloca Assets/Resources/Arrow.prefab.");
-            return;
-        }
 
         // --- UI
         var canvasGo = new GameObject("Canvas");
@@ -108,7 +127,7 @@ public class GameBootstrap : MonoBehaviour
         {
             var es = new GameObject("EventSystem");
             es.AddComponent<EventSystem>();
-            es.AddComponent<StandaloneInputModule>();
+            es.AddComponent<InputSystemUIInputModule>();
         }
 
         Font uiFont = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
@@ -180,6 +199,8 @@ public class GameBootstrap : MonoBehaviour
 
         bowCtrl.Wire(arrowTemplate, shoot.transform, fillImg, bullCol);
         bowCtrl.SetShotTuning(16f, 14f, 40f);
+        if (arrowShotSprite != null)
+            bowCtrl.SetArrowVisual(arrowShotSprite, arrowShotScale);
 
         // Zona inferior: elimina flechas que caen
         var kill = new GameObject("KillZone");
