@@ -25,7 +25,9 @@ public class GameBootstrap : MonoBehaviour
     [SerializeField] float targetVisualScale = 1.35f;
     [Tooltip("Radio del centro que suma puntos, como fracción del semirradio de la cara (medido en target.jpg: oro ~87px / 256px).")]
     [SerializeField] [Range(0.08f, 0.55f)] float bullseyeRadiusFractionOfFaceHalf = 87f / 256f;
-    [SerializeField] float bowVisualScale = 1.15f;
+    [SerializeField] float bowVisualScale = 2.75f;
+    [Tooltip("Separación del borde inferior izquierdo de la cámara (mundo) para el tirador.")]
+    [SerializeField] float bowCornerMarginWorld = 0.22f;
     [Tooltip("Sprite visual de la flecha disparada (ej. Assets/Sprites/arrow.png).")]
     [SerializeField] Sprite arrowShotSprite;
     [SerializeField] Vector3 arrowShotScale = new Vector3(0.48f, 0.48f, 1f);
@@ -119,16 +121,19 @@ public class GameBootstrap : MonoBehaviour
             bullSr.enabled = true;
         }
 
-        // --- Arco / disparo
+        // --- Arco / disparo (escala y esquina inferior izquierda según cámara)
         var bow = new GameObject("Bow");
-        bow.transform.position = new Vector3(-7.5f, -2.2f, 0f);
         var shoot = new GameObject("ShootPoint");
         shoot.transform.SetParent(bow.transform, false);
-        shoot.transform.localPosition = new Vector3(0.4f, 0.35f, 0f);
+        const float shootRefScale = 1.15f;
+        shoot.transform.localPosition = bowSprite != null
+            ? new Vector3(0.4f, 0.35f, 0f) * (bowVisualScale / shootRefScale)
+            : new Vector3(0.4f, 0.35f, 0f);
         var bowSr = bow.AddComponent<SpriteRenderer>();
         bowSr.sprite = bowSprite != null ? bowSprite : MakeSpriteSquare(new Color(0.45f, 0.28f, 0.12f));
         bowSr.sortingOrder = 2;
         bow.transform.localScale = bowSprite != null ? new Vector3(bowVisualScale, bowVisualScale, 1f) : new Vector3(0.5f, 0.8f, 1f);
+        PlaceBowBottomLeft(bow, bowSr, cam, bowCornerMarginWorld);
 
         var bowCtrl = bow.AddComponent<BowController>();
 
@@ -152,18 +157,34 @@ public class GameBootstrap : MonoBehaviour
         if (uiFont == null)
             uiFont = Font.CreateDynamicFontFromOSFont("Liberation Sans", 32);
 
+        Sprite uiSprite = MakeUiSprite();
+
+        var scorePanel = new GameObject("ScorePanel");
+        scorePanel.transform.SetParent(canvasGo.transform, false);
+        var scorePanelRt = scorePanel.AddComponent<RectTransform>();
+        scorePanelRt.anchorMin = new Vector2(0, 1);
+        scorePanelRt.anchorMax = new Vector2(0, 1);
+        scorePanelRt.pivot = new Vector2(0, 1);
+        scorePanelRt.anchoredPosition = new Vector2(18, -18);
+        scorePanelRt.sizeDelta = new Vector2(300, 58);
+        var scorePanelBg = scorePanel.AddComponent<Image>();
+        scorePanelBg.sprite = uiSprite;
+        scorePanelBg.color = new Color(0.06f, 0.08f, 0.12f, 0.88f);
+        scorePanelBg.raycastTarget = false;
+
         var scoreGo = new GameObject("ScoreText");
-        scoreGo.transform.SetParent(canvasGo.transform, false);
+        scoreGo.transform.SetParent(scorePanel.transform, false);
         var scoreRt = scoreGo.AddComponent<RectTransform>();
-        scoreRt.anchorMin = new Vector2(0, 1);
-        scoreRt.anchorMax = new Vector2(0, 1);
-        scoreRt.pivot = new Vector2(0, 1);
-        scoreRt.anchoredPosition = new Vector2(40, -40);
-        scoreRt.sizeDelta = new Vector2(420, 80);
+        scoreRt.anchorMin = Vector2.zero;
+        scoreRt.anchorMax = Vector2.one;
+        scoreRt.offsetMin = new Vector2(12f, 6f);
+        scoreRt.offsetMax = new Vector2(-12f, -6f);
         var scoreText = scoreGo.AddComponent<Text>();
         scoreText.font = uiFont;
-        scoreText.fontSize = 36;
+        scoreText.fontSize = 34;
         scoreText.color = Color.white;
+        scoreText.alignment = TextAnchor.MiddleCenter;
+        scoreText.alignByGeometry = true;
         scoreText.text = "Puntos: 0";
 
         var fbGo = new GameObject("FeedbackText");
@@ -181,7 +202,6 @@ public class GameBootstrap : MonoBehaviour
         fbText.color = new Color(1f, 0.4f, 0.35f);
         fbText.gameObject.SetActive(false);
 
-        Sprite uiSprite = MakeUiSprite();
         var barGo = new GameObject("PowerBar");
         barGo.transform.SetParent(canvasGo.transform, false);
         var barRt = barGo.AddComponent<RectTransform>();
@@ -216,7 +236,8 @@ public class GameBootstrap : MonoBehaviour
         gf.SetFeedbackText(fbText);
 
         bowCtrl.Wire(arrowTemplate, shoot.transform, fillImg, bullCol);
-        bowCtrl.SetShotTuning(16f, 14f, 40f);
+        // Trayectoria ~28° (arriba-derecha), acorde a la flecha en vuelo de referencia; potencia sin cambiar.
+        bowCtrl.SetShotTuning(30f, 24f, 28f, 9f);
         if (arrowShotSprite != null)
             bowCtrl.SetArrowVisual(arrowShotSprite, arrowShotScale);
 
@@ -227,6 +248,24 @@ public class GameBootstrap : MonoBehaviour
         var kc = kill.AddComponent<BoxCollider2D>();
         kc.isTrigger = true;
         kc.size = new Vector2(40f, 2f);
+    }
+
+    /// <summary>Coloca el tirador en la esquina inferior izquierda visible (pivote del sprite ~centro).</summary>
+    static void PlaceBowBottomLeft(GameObject bow, SpriteRenderer sr, Camera cam, float marginWorld)
+    {
+        if (cam == null || !cam.orthographic || bow == null)
+            return;
+        float halfH = cam.orthographicSize;
+        float halfW = halfH * cam.aspect;
+        float ex = 0.35f;
+        float ey = 0.55f;
+        if (sr != null && sr.sprite != null)
+        {
+            ex = sr.bounds.extents.x;
+            ey = sr.bounds.extents.y;
+        }
+
+        bow.transform.position = new Vector3(-halfW + marginWorld + ex, -halfH + marginWorld + ey, 0f);
     }
 
     /// <summary>

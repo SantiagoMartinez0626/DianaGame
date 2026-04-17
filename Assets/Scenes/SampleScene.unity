@@ -400,6 +400,6 @@ MonoBehaviour:
   targetSprite: {fileID: 2234567890123456789, guid: e2f3a4b5c6d7478901234567890abcde, type: 3}
   bowSprite: {fileID: 4234567890123456789, guid: a4b5c6d7e8f9478901234567890abcde, type: 3}
   targetVisualScale: 1.35
-  bowVisualScale: 1.15
+  bowVisualScale: 2.75
   arrowShotSprite: {fileID: 3234567890123456789, guid: 13662d06f567c9f9abf2a59b0443d799, type: 3}
   arrowShotScale: {x: 0.48, y: 0.48, z: 1}

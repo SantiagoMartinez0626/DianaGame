@@ -9,17 +9,19 @@ public class BowController : MonoBehaviour
 {
     [SerializeField] GameObject arrowPrefab;
     [SerializeField] Transform shootPoint;
-    [SerializeField] float maxPower = 14f;
-    [SerializeField] float powerPerSecond = 12f;
-    [SerializeField] float shotAngleDeg = 38f;
+    [SerializeField] float maxPower = 28f;
+    [SerializeField] float powerPerSecond = 22f;
+    [SerializeField] float shotAngleDeg = 28f;
     [SerializeField] Image powerBarFill;
     [SerializeField] CircleCollider2D bullseyeCollider;
     [SerializeField] Sprite arrowSprite;
     [SerializeField] Vector3 arrowVisualScale = new Vector3(0.45f, 0.45f, 1f);
-    [SerializeField] float minShotPower = 4f;
+    [SerializeField] float minShotPower = 8f;
     [SerializeField] int arrowSortingOrder = 40;
-    [Tooltip("Si el dibujo de la flecha apunta hacia arriba en el sprite (+Y), usa -90. Si apunta a la derecha (+X), deja 0.")]
-    [SerializeField] float arrowSpriteFacingOffsetDeg = -90f;
+    [Tooltip("Suma a la rotación Z. En 0 la punta del sprite sigue +X local (flecha horizontal en la textura, como arrow.png). Si tu arte tiene la punta hacia +Y, prueba -90.")]
+    [SerializeField] float arrowSpriteFacingOffsetDeg = 0f;
+    [Tooltip("Ángulo de la flecha en pantalla respecto al horizontal (punta arriba-derecha, ~25–30° como en la referencia).")]
+    [SerializeField] [Range(22f, 30f)] float arrowTipAngleFromHorizontalDeg = 28f;
 
     float _power;
     float _nextShotTime;
@@ -36,11 +38,13 @@ public class BowController : MonoBehaviour
     }
 
     /// <summary>Valores por defecto pensados para cámara ortográfica ~6 y diana a la derecha.</summary>
-    public void SetShotTuning(float maxP, float chargeRate, float angleDegrees)
+    public void SetShotTuning(float maxP, float chargeRate, float angleDegrees, float minShotPowerOverride = 0f)
     {
         maxPower = maxP;
         powerPerSecond = chargeRate;
         shotAngleDeg = angleDegrees;
+        if (minShotPowerOverride > 0f)
+            minShotPower = minShotPowerOverride;
     }
 
     public void SetArrowVisual(Sprite sprite, Vector3 scale)
@@ -103,8 +107,9 @@ public class BowController : MonoBehaviour
         float rad = shotAngleDeg * Mathf.Deg2Rad;
         var vel = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * shotPower;
         rb.linearVelocity = vel;
-        float angleDeg = Mathf.Atan2(vel.y, vel.x) * Mathf.Rad2Deg + arrowSpriteFacingOffsetDeg;
-        arrow.transform.rotation = Quaternion.Euler(0f, 0f, angleDeg);
+        // Rotación Z: en Unity transform.right = (cos Z, sin Z); la punta del prefab va en +X local (ver Arrow.GetTipWorld).
+        float tipDeg = Mathf.Clamp(arrowTipAngleFromHorizontalDeg, 22f, 30f) + arrowSpriteFacingOffsetDeg;
+        arrow.transform.rotation = Quaternion.Euler(0f, 0f, tipDeg);
 
         var arrowScript = arrow.GetComponent<Arrow>();
         if (arrowScript != null && bullseyeCollider != null)
