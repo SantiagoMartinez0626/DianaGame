@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
+// Mensajes temporales centrados: fallo (¡Fallaste!) y acierto (¡Genial!).
 public class GameFeedback : MonoBehaviour
 {
     public static GameFeedback Instance { get; private set; }

@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Movimiento horizontal de la diana: va de -limit a +limit invirtiendo dirección (requisito del parcial).
 public class TargetMovement : MonoBehaviour
 {
     [SerializeField] float speed = 3f;

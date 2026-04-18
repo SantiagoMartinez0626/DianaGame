@@ -1,5 +1,6 @@
 using UnityEngine;
 
+// Colisiones en trigger: acierto solo si la punta entra en el collider Bullseye; al salir del anillo exterior sin acierto = Fallaste.
 public class Arrow : MonoBehaviour
 {
     [SerializeField] CircleCollider2D bullseyeCollider;
@@ -19,6 +20,7 @@ public class Arrow : MonoBehaviour
         return Vector2.Distance(worldPos, bull.transform.position) <= r;
     }
 
+    // Punta de impacto: sigue la dirección del vuelo (Rigidbody2D) para coincidir con la trayectoria parabólica.
     Vector2 GetTipWorld()
     {
         var bc = GetComponent<BoxCollider2D>();

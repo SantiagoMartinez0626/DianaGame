@@ -2,7 +2,7 @@
 
 ## Estudiante
 
-- **Nombre completo:** Michael Santiago Martinez López
+- **Nombre:** Michael Santiago Martinez López
 - **Parcial:** #2
 
 ## Descripción
@@ -17,11 +17,33 @@ Juego de tiro al blanco en 2D (Unity 6, URP): una diana se mueve horizontalmente
 
 ## Capturas de pantalla
 
-Coloca aquí las imágenes desde la carpeta `Screenshots/` (mínimo 5 según la consigna).
+Todas están en la carpeta **`Screenshots/`** (raíz del repositorio).
 
-## Video de funcionamiento
+### 01 — Pantalla inicial / estado del juego
+![Vista inicial con fondo, diana, tirador y puntaje](Screenshots/01_initial_screen.png)
 
-[Ver video del juego](https://)
+Al iniciar el modo **Play**, se ve el escenario (fondo, diana móvil, arquero a la izquierda), la UI con **Puntos: 0** y la barra de potencia vacía abajo.
+
+### 02 — Carga de disparo (barra de potencia)
+![Barra de potencia mientras se carga con Espacio](Screenshots/02_power_bar.png)
+
+Con la tecla **Espacio** mantenida, la barra inferior se llena y muestra la fuerza acumulada antes de soltar el disparo.
+
+### 03 — Flecha en vuelo
+![Flecha volando hacia la diana](Screenshots/03_arrow_in_flight.png)
+
+Tras soltar **Espacio**, la flecha sigue una trayectoria parabólica (con gravedad) hacia la diana.
+
+### 04 — Flecha cerca de la diana
+![Flecha acercándose a la cara de la diana](Screenshots/04_arrow_at_target.png)
+
+Momento de gameplay en el que la flecha se aproxima a los anillos de la diana; el acierto depende de que la **punta** entre en el collider del centro (bullseye).
+
+### 05 — Puntuación y feedback
+![Puntaje actualizado y mensaje de acierto](Screenshots/05_scoring_points.png)
+
+Tras un acierto en el centro, el texto **Puntos** aumenta de 10 en 10 y puede mostrarse el mensaje **«¡Genial!»** (acierto); en un fallo en anillos exteriores aparecería **«¡Fallaste!»**.
+
 
 ## Cómo ejecutar el proyecto
 

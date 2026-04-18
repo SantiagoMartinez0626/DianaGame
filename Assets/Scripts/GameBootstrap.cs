@@ -3,6 +3,8 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
+// Construye la escena al iniciar: fondo, diana (OuterRing + Bullseye), arco, UI (puntaje, barra, feedback), KillZone.
+// El prefab de flecha se carga desde Resources; el resto de referencias se asignan por código en Build().
 public class GameBootstrap : MonoBehaviour
 {
     [SerializeField] bool buildOnAwake = true;
@@ -32,6 +34,7 @@ public class GameBootstrap : MonoBehaviour
         if (_built)
             return;
 
+        // Prefab obligatorio para BowController (disparo).
         GameObject arrowTemplate = Resources.Load<GameObject>("Arrow");
         if (arrowTemplate == null)
         {
@@ -49,6 +52,7 @@ public class GameBootstrap : MonoBehaviour
             cam.backgroundColor = new Color(0.15f, 0.2f, 0.28f);
         }
 
+        // Fondo: sprite asignado o color plano; escala tipo "cover" a la cámara ortográfica.
         var bg = new GameObject("Background");
         var bgSr = bg.AddComponent<SpriteRenderer>();
         bgSr.sortingOrder = -20;
@@ -64,6 +68,7 @@ public class GameBootstrap : MonoBehaviour
             bg.transform.localScale = new Vector3(24f, 16f, 1f);
         }
 
+        // Diana: TargetMovement + anillo exterior (tag OuterRing) + centro (tag Bullseye), único que suma puntos.
         var target = new GameObject("Target");
         target.transform.position = Vector3.zero;
         target.AddComponent<TargetMovement>().Configure(3.5f, 4.5f);
@@ -106,6 +111,7 @@ public class GameBootstrap : MonoBehaviour
             bullSr.enabled = true;
         }
 
+        // Tirador y punto de disparo; BowController gestiona Espacio y la barra de potencia.
         var bow = new GameObject("Bow");
         var shoot = new GameObject("ShootPoint");
         shoot.transform.SetParent(bow.transform, false);
@@ -121,6 +127,7 @@ public class GameBootstrap : MonoBehaviour
 
         var bowCtrl = bow.AddComponent<BowController>();
 
+        // Canvas: puntaje, mensajes (GameFeedback) y barra de carga horizontal.
         var canvasGo = new GameObject("Canvas");
         var canvas = canvasGo.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -223,6 +230,7 @@ public class GameBootstrap : MonoBehaviour
         if (arrowShotSprite != null)
             bowCtrl.SetArrowVisual(arrowShotSprite, arrowShotScale);
 
+        // Elimina flechas que caen sin puntuar.
         var kill = new GameObject("KillZone");
         kill.tag = "KillZone";
         kill.transform.position = new Vector3(0f, -8f, 0f);
@@ -248,6 +256,7 @@ public class GameBootstrap : MonoBehaviour
         bow.transform.position = new Vector3(-halfW + marginWorld + ex, -halfH + marginWorld + ey, 0f);
     }
 
+    // Ajusta escala/posición del fondo para cubrir el rectángulo visible (modo cover).
     static void FitSpriteToOrthographicCamera(SpriteRenderer sr, Camera cam, float padding)
     {
         if (sr == null || sr.sprite == null)

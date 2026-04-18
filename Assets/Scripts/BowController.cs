@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
 
+// Mecánica de disparo: mantener Espacio carga potencia; al soltar instancia la flecha con velocidad y orientación del sprite.
 public class BowController : MonoBehaviour
 {
     [SerializeField] GameObject arrowPrefab;
@@ -98,6 +99,7 @@ public class BowController : MonoBehaviour
         float rad = shotAngleDeg * Mathf.Deg2Rad;
         var vel = new Vector2(Mathf.Cos(rad), Mathf.Sin(rad)) * shotPower;
         rb.linearVelocity = vel;
+        // Sprite arrow.png: astil en +Y local; se compensa -90° para alinear la punta con la trayectoria.
         float alpha = Mathf.Clamp(arrowTipAngleFromHorizontalDeg, 32f, 42f);
         float tipDeg = alpha - 90f + arrowSpriteFacingOffsetDeg;
         arrow.transform.rotation = Quaternion.Euler(0f, 0f, tipDeg);

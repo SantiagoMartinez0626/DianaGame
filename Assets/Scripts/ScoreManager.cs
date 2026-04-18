@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 
+// Puntaje global (+10 por acierto); actualiza el texto UI "Puntos: X".
 public class ScoreManager : MonoBehaviour
 {
     public static ScoreManager Instance { get; private set; }
