@@ -1,9 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Flecha con triggers: el acierto se comprueba con la punta mientras cruza la diana;
-/// "Fallaste" solo al salir de la cara sin haber pasado por el centro (oro).
-/// </summary>
 public class Arrow : MonoBehaviour
 {
     [SerializeField] CircleCollider2D bullseyeCollider;
@@ -23,12 +19,18 @@ public class Arrow : MonoBehaviour
         return Vector2.Distance(worldPos, bull.transform.position) <= r;
     }
 
-    /// <summary>Punto delantero de la flecha (eje X local = dirección del vuelo).</summary>
     Vector2 GetTipWorld()
     {
         var bc = GetComponent<BoxCollider2D>();
-        float half = bc != null ? bc.size.x * Mathf.Abs(transform.lossyScale.x) * 0.5f : 0.2f;
-        return (Vector2)transform.position + (Vector2)transform.right * half;
+        var rb = GetComponent<Rigidbody2D>();
+        float half = bc != null
+            ? Mathf.Max(
+                bc.size.x * Mathf.Abs(transform.lossyScale.x),
+                bc.size.y * Mathf.Abs(transform.lossyScale.y)) * 0.5f
+            : 0.2f;
+        if (rb != null && rb.linearVelocity.sqrMagnitude > 1e-6f)
+            return (Vector2)transform.position + rb.linearVelocity.normalized * half;
+        return (Vector2)transform.position + (Vector2)transform.up * half;
     }
 
     void TryRegisterBullseyeHit()
@@ -39,7 +41,6 @@ public class Arrow : MonoBehaviour
             RegisterHit();
     }
 
-    /// <summary>Para que no siga el vuelo un frame más: quita física, triggers y dibujo al instante.</summary>
     void FreezeAndHide()
     {
         var rb = GetComponent<Rigidbody2D>();

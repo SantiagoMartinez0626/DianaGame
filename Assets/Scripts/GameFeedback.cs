@@ -2,9 +2,6 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
-/// <summary>
-/// Muestra mensajes breves de feedback (por ejemplo, fallo en anillo exterior).
-/// </summary>
 public class GameFeedback : MonoBehaviour
 {
     public static GameFeedback Instance { get; private set; }

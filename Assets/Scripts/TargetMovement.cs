@@ -1,8 +1,5 @@
 using UnityEngine;
 
-/// <summary>
-/// Mueve la diana horizontalmente entre -limit y +limit, invirtiendo dirección en los bordes.
-/// </summary>
 public class TargetMovement : MonoBehaviour
 {
     [SerializeField] float speed = 3f;
@@ -10,7 +7,6 @@ public class TargetMovement : MonoBehaviour
 
     int _direction = 1;
 
-    /// <summary>Ajuste opcional desde el bootstrap (velocidad y mitad del recorrido en X).</summary>
     public void Configure(float moveSpeed, float horizontalLimit)
     {
         speed = moveSpeed;

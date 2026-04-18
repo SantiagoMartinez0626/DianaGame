@@ -3,32 +3,21 @@ using UnityEngine.EventSystems;
 using UnityEngine.InputSystem.UI;
 using UnityEngine.UI;
 
-/// <summary>
-/// Construye la escena de juego al iniciar: placeholders (sprites generados), diana, arco, UI y referencias.
-/// </summary>
 public class GameBootstrap : MonoBehaviour
 {
     [SerializeField] bool buildOnAwake = true;
     bool _built;
 
-    [Header("Fondo")]
-    [Tooltip("Arrastra aquí el sprite importado desde Assets/Sprites/background.jpg (Texture Type: Sprite).")]
     [SerializeField] Sprite backgroundSprite;
 
     [SerializeField] [Range(1f, 1.1f)] float backgroundCoverPadding = 1.02f;
 
-    [Header("Sprites de gameplay")]
-    [Tooltip("Sprite de la diana completa (ej. Assets/Sprites/target.jpg).")]
     [SerializeField] Sprite targetSprite;
-    [Tooltip("Sprite del arco (opcional). Si no existe, usa placeholder.")]
     [SerializeField] Sprite bowSprite;
     [SerializeField] float targetVisualScale = 1.35f;
-    [Tooltip("Radio del centro que suma puntos, como fracción del semirradio de la cara (medido en target.jpg: oro ~87px / 256px).")]
     [SerializeField] [Range(0.08f, 0.55f)] float bullseyeRadiusFractionOfFaceHalf = 87f / 256f;
     [SerializeField] float bowVisualScale = 2.75f;
-    [Tooltip("Separación del borde inferior izquierdo de la cámara (mundo) para el tirador.")]
     [SerializeField] float bowCornerMarginWorld = 0.22f;
-    [Tooltip("Sprite visual de la flecha disparada (ej. Assets/Sprites/arrow.png).")]
     [SerializeField] Sprite arrowShotSprite;
     [SerializeField] Vector3 arrowShotScale = new Vector3(0.48f, 0.48f, 1f);
 
@@ -60,7 +49,6 @@ public class GameBootstrap : MonoBehaviour
             cam.backgroundColor = new Color(0.15f, 0.2f, 0.28f);
         }
 
-        // --- Fondo (imagen en Assets/Sprites o placeholder)
         var bg = new GameObject("Background");
         var bgSr = bg.AddComponent<SpriteRenderer>();
         bgSr.sortingOrder = -20;
@@ -76,12 +64,10 @@ public class GameBootstrap : MonoBehaviour
             bg.transform.localScale = new Vector3(24f, 16f, 1f);
         }
 
-        // --- Diana
         var target = new GameObject("Target");
         target.transform.position = Vector3.zero;
         target.AddComponent<TargetMovement>().Configure(3.5f, 4.5f);
 
-        // Anillo exterior (visual + trigger)
         var outer = new GameObject("OuterRing");
         outer.transform.SetParent(target.transform, false);
         outer.tag = "OuterRing";
@@ -96,7 +82,6 @@ public class GameBootstrap : MonoBehaviour
         else
             outerCol.radius = 0.5f;
 
-        // Centro (bullseye): con textura, el collider sigue el círculo amarillo del arte (ver bullseyeRadiusFractionOfFaceHalf).
         var bull = new GameObject("Bullseye");
         bull.transform.SetParent(target.transform, false);
         bull.tag = "Bullseye";
@@ -121,7 +106,6 @@ public class GameBootstrap : MonoBehaviour
             bullSr.enabled = true;
         }
 
-        // --- Arco / disparo (escala y esquina inferior izquierda según cámara)
         var bow = new GameObject("Bow");
         var shoot = new GameObject("ShootPoint");
         shoot.transform.SetParent(bow.transform, false);
@@ -137,7 +121,6 @@ public class GameBootstrap : MonoBehaviour
 
         var bowCtrl = bow.AddComponent<BowController>();
 
-        // --- UI
         var canvasGo = new GameObject("Canvas");
         var canvas = canvasGo.AddComponent<Canvas>();
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
@@ -236,12 +219,10 @@ public class GameBootstrap : MonoBehaviour
         gf.SetFeedbackText(fbText);
 
         bowCtrl.Wire(arrowTemplate, shoot.transform, fillImg, bullCol);
-        // Trayectoria ~28° (arriba-derecha), acorde a la flecha en vuelo de referencia; potencia sin cambiar.
-        bowCtrl.SetShotTuning(30f, 24f, 28f, 9f);
+        bowCtrl.SetShotTuning(30f, 24f, 37f, 9f);
         if (arrowShotSprite != null)
             bowCtrl.SetArrowVisual(arrowShotSprite, arrowShotScale);
 
-        // Zona inferior: elimina flechas que caen
         var kill = new GameObject("KillZone");
         kill.tag = "KillZone";
         kill.transform.position = new Vector3(0f, -8f, 0f);
@@ -250,7 +231,6 @@ public class GameBootstrap : MonoBehaviour
         kc.size = new Vector2(40f, 2f);
     }
 
-    /// <summary>Coloca el tirador en la esquina inferior izquierda visible (pivote del sprite ~centro).</summary>
     static void PlaceBowBottomLeft(GameObject bow, SpriteRenderer sr, Camera cam, float marginWorld)
     {
         if (cam == null || !cam.orthographic || bow == null)
@@ -268,9 +248,6 @@ public class GameBootstrap : MonoBehaviour
         bow.transform.position = new Vector3(-halfW + marginWorld + ex, -halfH + marginWorld + ey, 0f);
     }
 
-    /// <summary>
-    /// Escala el sprite para cubrir el rectángulo visible de la cámara ortográfica (modo “cover”).
-    /// </summary>
     static void FitSpriteToOrthographicCamera(SpriteRenderer sr, Camera cam, float padding)
     {
         if (sr == null || sr.sprite == null)
